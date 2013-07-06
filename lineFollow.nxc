@@ -53,8 +53,12 @@ void drive(byte left,byte right,float pwr,float steer) {
     if(abs(steer) > 0.5) {
         pwr *= 0.6;
     }
-    OnFwd(left,lPwr*pwr*100.0);
-    OnFwd(right,rPwr*pwr*100.0);
+    char lOut = lPwr*pwr*100.0,
+         rOut = rPwr*pwr*100.0;
+    NumOut(0,LCD_LINE2,lOut);
+    NumOut(0,LCD_LINE3,rOut);
+    OnFwd(left,lOut);
+    OnFwd(right,rOut);
 
 }
 void followLine(const LightSensor& ls) {
@@ -78,8 +82,6 @@ task main() {
         ls.white = ls.black;
         ls.black = tmp;
     }
-    NumOut(0,LCD_LINE2,ls.white);
-    NumOut(0,LCD_LINE3,ls.black);
 
     while(1) {
         followLine(ls);
