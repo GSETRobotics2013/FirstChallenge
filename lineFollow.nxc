@@ -33,36 +33,25 @@ float readLS(const LightSensor& ls) {
     return diff/scale;
 }
 
-int _prevTurnState = 0;
-long _turnStart = 0;
+float max(float a,float b) {
+    return a > b ? a : b;
+}
+
 void drive(byte left,byte right,float pwr,float steer) {
     ClearLine(LCD_LINE1);
     NumOut(0,LCD_LINE1,steer);
     float lPwr = 1.0,rPwr = 1.0;
-    if(steer < 0.0) {
-        lPwr += 2.0*steer;
+    if(steer < 0) {
+        lPwr += 2*steer;
     } else {
-        rPwr -= 2.0*steer;
+        rPwr -= 2*steer;
     }
-    long turn = steer >  0.5 ?  1 :
-                steer < -0.5 ? -1 :
-                                0;
-    if(turn != 0) {
-        pwr *= 0.5;
-    }
-    if(turn != _prevTurnState) {
-        _prevTurnState = turn;
-        _turnStart = turn == -1 ? MotorRotationCount(PORT_LMOTOR) :
-                     turn ==  1 ? MotorRotationCount(PORT_RMOTOR) :
-                                  0;
-    } else if(turn != 0) {
-        long turnDist = turn == -1 ? MotorRotationCount(PORT_LMOTOR) :
-                        turn ==  1 ? MotorRotationCount(PORT_RMOTOR) :
-                                     0;
-        if(turnDist-_turnStart > 240) {
-            rPwr = turn;
-            lPwr = -turn;
-        }
+    ClearLine(LCD_LINE4);
+    NumOut(0,LCD_LINE4,lPwr);
+    ClearLine(LCD_LINE5);
+    NumOut(0,LCD_LINE5,rPwr);
+    if(abs(steer) > 0.5) {
+        pwr *= 0.6;
     }
     OnFwd(left,lPwr*pwr*100.0);
     OnFwd(right,rPwr*pwr*100.0);
@@ -70,8 +59,6 @@ void drive(byte left,byte right,float pwr,float steer) {
 }
 void followLine(const LightSensor& ls) {
     float sensor = readLS(ls);
-    ClearLine(LCD_LINE5);
-    NumOut(0,LCD_LINE5,sensor);
     drive(PORT_LMOTOR,PORT_RMOTOR,0.5,(readLS(ls)-0.5)/0.5);
 }
     
