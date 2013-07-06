@@ -11,50 +11,86 @@ struct LightSensor {
 void calibrateLS(LightSensor& ls,bool white) {
     unsigned int sensorValue = SensorRaw(ls.port);
     if(white) {
+        TextOut(0,LCD_LINE8,"WHITE");
         ls.white = sensorValue;
     } else {
+        TextOut(0,LCD_LINE8,"BLACK");
         ls.black = sensorValue;
     }
 }
 
 float readLS(const LightSensor& ls) {
     unsigned int sensor = SensorRaw(ls.port);
+    NumOut(0,LCD_LINE6,sensor);
     if(sensor < ls.black) {
-        return 0;
+        return 0.0;
     }
     if(sensor > ls.white) {
-        return 1;
+        return 1.0;
     }
+    float diff = sensor-ls.black;
     float scale = ls.white-ls.black;
-    return (sensor-ls.black)/scale;
+    return diff/scale;
 }
 
+int _prevTurnState = 0;
+long _turnStart = 0;
 void drive(byte left,byte right,float pwr,float steer) {
     ClearLine(LCD_LINE1);
-    NumOut(0,LCD_LINE1,steer*100);
-    float lPwr = 1,rPwr = 1;
-    if(steer > 0) {
-        lPwr -= 2*steer;
+    NumOut(0,LCD_LINE1,steer);
+    float lPwr = 1.0,rPwr = 1.0;
+    if(steer < 0.0) {
+        lPwr += 2.0*steer;
     } else {
-        rPwr += 2*steer;
+        rPwr -= 2.0*steer;
     }
-    OnRev(left,lPwr*pwr*100);
-    OnFwd(right,rPwr*pwr*100);
+    long turn = steer >  0.5 ?  1 :
+                steer < -0.5 ? -1 :
+                                0;
+    if(turn != 0) {
+        pwr *= 0.5;
+    }
+    if(turn != _prevTurnState) {
+        _prevTurnState = turn;
+        _turnStart = turn == -1 ? MotorRotationCount(PORT_LMOTOR) :
+                     turn ==  1 ? MotorRotationCount(PORT_RMOTOR) :
+                                  0;
+    } else if(turn != 0) {
+        long turnDist = turn == -1 ? MotorRotationCount(PORT_LMOTOR) :
+                        turn ==  1 ? MotorRotationCount(PORT_RMOTOR) :
+                                     0;
+        if(turnDist-_turnStart > 240) {
+            rPwr = turn;
+            lPwr = -turn;
+        }
+    }
+    OnFwd(left,lPwr*pwr*100.0);
+    OnFwd(right,rPwr*pwr*100.0);
 
 }
 void followLine(const LightSensor& ls) {
-    drive(PORT_LMOTOR,PORT_RMOTOR,0.75,(readLS(ls)-0.5)/0.5);
+    float sensor = readLS(ls);
+    ClearLine(LCD_LINE5);
+    NumOut(0,LCD_LINE5,sensor);
+    drive(PORT_LMOTOR,PORT_RMOTOR,0.5,(readLS(ls)-0.5)/0.5);
 }
     
 task main() {
     LightSensor ls;
     ls.port = PORT_LIGHT;
     SetSensorLight(PORT_LIGHT);
+
+    Wait(250);
     
     calibrateLS(ls,false);
-    RotateMotor(PORT_RMOTOR,75,-240);
+    RotateMotor(PORT_RMOTOR,75,360);
     calibrateLS(ls,true);
-    RotateMotor(PORT_RMOTOR,75,240);
+    RotateMotor(PORT_RMOTOR,75,-360);
+    if(ls.white < ls.black) {
+        unsigned int tmp = ls.white;
+        ls.white = ls.black;
+        ls.black = tmp;
+    }
     NumOut(0,LCD_LINE2,ls.white);
     NumOut(0,LCD_LINE3,ls.black);
 
