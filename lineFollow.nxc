@@ -50,9 +50,6 @@ void drive(byte left,byte right,float pwr,float steer) {
     NumOut(0,LCD_LINE4,lPwr);
     ClearLine(LCD_LINE5);
     NumOut(0,LCD_LINE5,rPwr);
-    if(abs(steer) > 0.5) {
-        pwr *= 0.6;
-    }
     char lOut = lPwr*pwr*100.0,
          rOut = rPwr*pwr*100.0;
     NumOut(0,LCD_LINE2,lOut);
