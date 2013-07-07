@@ -67,7 +67,6 @@ void followLine(const LightSensor& ls) {
     
 task main() {
     LightSensor ls;
-    bool prevDeadBody = false;
 
     ls.port = PORT_LIGHT;
     SetSensorLight(PORT_LIGHT);
@@ -85,14 +84,32 @@ task main() {
         ls.black = tmp;
     }
 
+    bool prevDeadBody = false;
     int color = 0;
+    unsigned long prevBodyTick = 0;
+    int numBodies = 0;
+    unsigned int tones[3] = {
+        TONE_B6,
+        TONE_G6,
+        TONE_C7
+    };
     while(color != COLOR_RED) {
+        unsigned long tick = CurrentTick();
         color = SensorHTColorNum(PORT_COLOR);
         ClearLine(LCD_LINE4);
         NumOut(0,LCD_LINE4,color);
         bool deadBody = (color == 3); // 3: blue
-        if(deadBody && !prevDeadBody) {
-            PlayTone(TONE_C4,100);
+        if((numBodies == 0 || (tick-prevBodyTick > 2000)) &&
+           deadBody && !prevDeadBody) {
+            unsigned int tone;
+            if(numBodies >= 3) {
+                tone = tones[2];
+            } else {
+                tone = tones[numBodies];
+            }
+            PlayTone(tone,300);
+            prevBodyTick = tick;
+            numBodies++;
         }
         prevDeadBody = deadBody;
         followLine(ls);

@@ -1,0 +1,40 @@
+#define PORT_RMOTOR OUT_A
+#define PORT_LMOTOR OUT_B
+#define PORT_MOTORS OUT_AB
+#define PORT_
+
+void turnRight90() {
+    RotateMotorEx(PORT_MOTORS,50,400/2,100,true,true);
+}
+
+void turnLeft90() {
+    RotateMotorEx(PORT_MOTORS,50,420/2,-100,true,true);
+}
+
+task main() {
+#if 0
+    int direction = 0;
+    long lStart = MotorRotationCount(PORT_LMOTOR);
+    long rStart = MotorRotationCount(PORT_RMOTOR);
+    while(!ButtonState(BTNCENTER)) {
+        if(ButtonState(BTNLEFT)) {
+            direction = 1;
+        } else if(ButtonState(BTNRIGHT)) {
+            direction = -1;
+        }
+        if(direction) {
+            OnFwdSync(PORT_MOTORS,30,direction*100);
+        }
+    }
+    long lDist = MotorRotationCount(PORT_LMOTOR)-lStart,
+         rDist = MotorRotationCount(PORT_RMOTOR)-rStart;
+    Off(PORT_MOTORS);
+
+    ClearLine(LCD_LINE1);
+    ClearLine(LCD_LINE2);
+    NumOut(0,LCD_LINE1,lDist);
+    NumOut(0,LCD_LINE2,rDist);
+    
+    until(0);
+#endif
+}
