@@ -1,6 +1,10 @@
 #define PORT_RMOTOR OUT_A
 #define PORT_LMOTOR OUT_B
 #define PORT_LIGHT  IN_4
+#define PORT_COLOR  IN_2
+
+#define COLOR_BLUE  3
+#define COLOR_RED   7
 
 struct LightSensor {
     unsigned int black;
@@ -46,8 +50,6 @@ void drive(byte left,byte right,float pwr,float steer) {
     } else {
         rPwr -= 2*steer;
     }
-    ClearLine(LCD_LINE4);
-    NumOut(0,LCD_LINE4,lPwr);
     ClearLine(LCD_LINE5);
     NumOut(0,LCD_LINE5,rPwr);
     char lOut = lPwr*pwr*100.0,
@@ -65,8 +67,11 @@ void followLine(const LightSensor& ls) {
     
 task main() {
     LightSensor ls;
+    bool prevDeadBody = false;
+
     ls.port = PORT_LIGHT;
     SetSensorLight(PORT_LIGHT);
+    SetSensorType(PORT_COLOR, SENSOR_TYPE_LOWSPEED);
 
     Wait(250);
     
@@ -80,7 +85,18 @@ task main() {
         ls.black = tmp;
     }
 
-    while(1) {
+    int color = 0;
+    while(color != COLOR_RED) {
+        color = SensorHTColorNum(PORT_COLOR);
+        ClearLine(LCD_LINE4);
+        NumOut(0,LCD_LINE4,color);
+        bool deadBody = (color == 3); // 3: blue
+        if(deadBody && !prevDeadBody) {
+            PlayTone(TONE_C4,100);
+        }
+        prevDeadBody = deadBody;
         followLine(ls);
     }
+    Off(PORT_LMOTOR);
+    Off(PORT_RMOTOR);
 }
