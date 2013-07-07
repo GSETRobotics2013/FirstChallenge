@@ -2,6 +2,7 @@
 #define PORT_LMOTOR OUT_B
 #define PORT_LIGHT  IN_4
 #define PORT_COLOR  IN_2
+#define PORT_ULTRASONIC IN_3
 
 #define COLOR_BLUE  3
 #define COLOR_RED   7
@@ -64,6 +65,111 @@ void followLine(const LightSensor& ls) {
     float sensor = readLS(ls);
     drive(PORT_LMOTOR,PORT_RMOTOR,0.5,(readLS(ls)-0.5)/0.5);
 }
+
+void houseCode(){
+  unsigned long stop_time;
+  while(SensorUS(S3)>7){
+    OnFwd(OUT_AB,75);
+    Wait(15);
+  }
+
+  //turn right for 2 seconds
+  stop_time = CurrentTick() + 2000;
+  while (CurrentTick() < stop_time) {
+    OnFwd(OUT_A, 25);
+    OnRev(OUT_B, -25);
+  }
+  
+  while(SensorUS(S3)>7){
+    OnFwd(OUT_AB,50);
+    Wait(15);
+  }
+  
+  //turn left for 2 seconds
+  stop_time = CurrentTick() + 2000;
+  while (CurrentTick() < stop_time) {
+    OnFwd(OUT_A, -15);
+    OnRev(OUT_B, 15);
+  }
+  
+  //go forward till 15cm is in front of it
+  //may be replaced with arm code to simply break the plane of the room
+  while(SensorUS(S3)>15){
+    OnFwd(OUT_AB,50);
+    Wait(15);
+  }
+  
+  //code for setting if flag is in this room or not
+  
+  //reverse
+  //may not be needed with arm code implemented
+  while(SensorUS(S3)<75){
+    OnRev(OUT_AB,50);
+    Wait(15);
+  }
+  
+  //turn left for 2 seconds
+  stop_time = CurrentTick() + 2000;
+  while (CurrentTick() < stop_time) {
+    OnFwd(OUT_A, -15);
+    OnRev(OUT_B, 15);
+  }
+  
+  while(SensorUS(S3)>40){
+    OnFwd(OUT_AB,50);
+    Wait(15);
+  }
+  
+  //turn right for 2 seconds
+  stop_time = CurrentTick() + 2000;
+  while (CurrentTick() < stop_time) {
+    OnFwd(OUT_A, 15);
+    OnRev(OUT_B, -15);
+  }
+  
+  //may be replaced with arm's code
+  while(SensorUS(S3)>60){
+    OnFwd(OUT_AB,50);
+    Wait(15);
+  }
+  
+  while(SensorUS(S3)<100){
+    OnRev(OUT_AB,50);
+    Wait(15);
+  }
+
+  //turn left for 2 seconds
+  stop_time = CurrentTick() + 2000;
+  while (CurrentTick() < stop_time) {
+    OnFwd(OUT_A, -15);
+    OnRev(OUT_B, 15);
+  }
+  
+  while(SensorUS(S3)>7){
+    OnFwd(OUT_AB,50);
+    Wait(15);
+  }
+  
+  //turn right for 2 seconds
+  stop_time = CurrentTick() + 2000;
+  while (CurrentTick() < stop_time) {
+    OnFwd(OUT_A, 15);
+    OnRev(OUT_B, -15);
+  }
+  
+  while(SensorUS(S3)>7){
+    OnFwd(OUT_AB,50);
+    Wait(15);
+  }
+  
+  if(!ballInLeftRoom){
+    while(SensorUS(S3)<80){
+      OnRev(OUT_AB,50);
+      Wait(15);
+    }
+  }
+  //done searching every room
+}
     
 task main() {
     LightSensor ls;
@@ -71,6 +177,7 @@ task main() {
 
     ls.port = PORT_LIGHT;
     SetSensorLight(PORT_LIGHT);
+    SetSensorUltrasonic(PORT_ULTRASONIC);
     SetSensorType(PORT_COLOR, SENSOR_TYPE_LOWSPEED);
 
     Wait(250);
@@ -97,6 +204,7 @@ task main() {
         prevDeadBody = deadBody;
         followLine(ls);
     }
+    // houseCode();
     Off(PORT_LMOTOR);
     Off(PORT_RMOTOR);
 }
