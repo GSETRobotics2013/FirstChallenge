@@ -1,0 +1,16 @@
+#define PORT_ARMMOTOR OUT_C
+
+task main() {
+    OnRev(OUT_C,30);
+    Wait(500);
+    Off(OUT_C);
+    long initVal = MotorRotationCount(OUT_C);
+    while(!ButtonState(BTNCENTER));
+    while(1) {
+        if(MotorRotationCount(OUT_C)-initVal < 140) {
+            OnFwd(OUT_C,100);
+        } else {
+            Off(OUT_C);
+        }
+    }
+}

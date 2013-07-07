@@ -1,7 +1,7 @@
 #define PORT_RMOTOR OUT_A
 #define PORT_LMOTOR OUT_B
 #define PORT_MOTORS OUT_AB
-#define PORT_
+#define PORT_US     IN_3
 
 void turnRight90() {
     RotateMotorEx(PORT_MOTORS,50,400/2,100,true,true);
@@ -11,7 +11,29 @@ void turnLeft90() {
     RotateMotorEx(PORT_MOTORS,50,420/2,-100,true,true);
 }
 
+void runToWall() {
+    while(SensorUS(PORT_US) > 10) {
+        OnFwdSync(PORT_MOTORS,50,0);
+    }
+    Off(PORT_MOTORS);
+}
+
 task main() {
+    SetSensorUltrasonic(PORT_US);
+    Wait(2000);
+    while(!ButtonState(BTNCENTER)) {
+        ClearLine(LCD_LINE1);
+        NumOut(0,LCD_LINE1,SensorUS(PORT_US));
+        Wait(40);
+    }
+
+    runToWall();
+    turnRight90();
+    runToWall();
+    turnLeft90();
+    runToWall();
+    turnRight90();
+    turnRight90();
 #if 0
     int direction = 0;
     long lStart = MotorRotationCount(PORT_LMOTOR);
