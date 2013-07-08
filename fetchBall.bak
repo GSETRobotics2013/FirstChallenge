@@ -58,12 +58,12 @@ void HTEnhancedIRSeekerV2(const byte  port, int &dir, int &strength)
   }
 }
 
+
 task main()
 {
   int dir;
   int strength;
   bool alreadySynced = false;
-  int rotationDeg;
   
   SetSensorLowspeed(S1);
 //  SetHTIRSeeker2Mode(S1, HTIR2_MODE_1200);
@@ -74,16 +74,6 @@ task main()
       
       if (dir > 1) {
          if(!alreadySynced) {
-             while(dir == 5) {
-                 OnRev(OUT_A, 25);
-             }
-             while(dir == 5) {
-                 OnFwd(OUT_A, 25);
-                 rotationDeg = rotationDeg + MotorRotationCount(OUT_A);
-             }
-             rotationDeg /= 2;
-             RotateMotorEx(OUT_A, 25, rotationDeg);
-             alreadySynced = true;
          }
          OnFwdSync(OUT_AB, 50, (5-dir) * -25);
          alreadySynced = true;
