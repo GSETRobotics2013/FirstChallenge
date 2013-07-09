@@ -78,7 +78,7 @@ task main()
                  OnRev(OUT_A, 25);
              }
              while(dir == 5) {
-                 OnFwd(OUT_A, 25);
+                 OnFwd(OUT_A, -25);
                  rotationDeg = rotationDeg + MotorRotationCount(OUT_A);
              }
              rotationDeg /= 2;
