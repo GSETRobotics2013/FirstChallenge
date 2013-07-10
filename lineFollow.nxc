@@ -67,6 +67,7 @@ void followLine(const LightSensor& ls) {
 }
 
 void houseCode(){
+#if 0
   unsigned long stop_time;
   while(SensorUS(S3)>7){
     OnFwd(OUT_AB,75);
@@ -169,6 +170,7 @@ void houseCode(){
     }
   }
   //done searching every room
+#endif
 }
     
 task main() {

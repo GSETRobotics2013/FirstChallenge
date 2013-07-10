@@ -1,0 +1,64 @@
+#define PORT_RMOTOR OUT_A
+#define PORT_LMOTOR OUT_B
+#define PORT_MOTORS OUT_AB
+#define PORT_US     IN_3
+
+#define SPEED 50
+
+float fabs(float x) {
+    return x < 0 ? -x : x;
+}
+
+task main() {
+    SetSensorUltrasonic(PORT_US);
+    while(1) {
+        while(ButtonState(BTNCENTER));
+        while(!ButtonState(BTNCENTER));
+        int minDist = 255,
+            prevDist,
+            dist = SensorUS(PORT_US);
+        minDist = dist;
+        int currMotor = MotorRotationCount(PORT_LMOTOR);
+        int negMotorBound = currMotor-1000,
+            posMotorBound = currMotor+1000;
+        int delta = 0;
+        int turn = 100;
+        OnFwdSync(PORT_MOTORS,30,turn);
+        while(turn != 0) {
+            prevDist = dist;
+            ClearLine(LCD_LINE1);
+            ClearLine(LCD_LINE2);
+            NumOut(0,LCD_LINE1,turn);
+            dist = SensorUS(PORT_US);
+            TextOut(dist,LCD_LINE2,"0");
+            if(dist > prevDist && dist > minDist) {
+                int motor = MotorRotationCount(PORT_LMOTOR);
+                if(turn > 0) {
+                    posMotorBound = motor;
+                    turn = -100;
+                    Off(PORT_MOTORS);
+                    TextOut(0,LCD_LINE3,"A");
+                    minDist = 255;
+                    dist = SensorUS(PORT_US);
+                } else {
+                    negMotorBound = motor;
+                    turn = 0;
+                    Off(PORT_MOTORS);
+                    TextOut(0,LCD_LINE3,"B");
+                }
+            } else if(dist < minDist) {
+                minDist = dist;
+            }
+            OnFwdSync(PORT_MOTORS,30,turn);
+        }
+        ClearLine(LCD_LINE1);
+        Off(PORT_MOTORS);
+        RotateMotorEx(PORT_MOTORS,30,
+                      ((posMotorBound+negMotorBound)/2)
+                        -MotorRotationCount(PORT_LMOTOR),
+                      100,
+                      true,
+                      true);
+        Off(PORT_MOTORS);
+    }
+}

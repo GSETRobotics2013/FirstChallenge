@@ -4,22 +4,28 @@
 #define PORT_US     IN_3
 
 void turnRight90() {
-    RotateMotorEx(PORT_MOTORS,50,400/2,100,true,true);
+    RotateMotorEx(PORT_MOTORS,50,430/2,100,true,true);
 }
 
 void turnLeft90() {
-    RotateMotorEx(PORT_MOTORS,50,420/2,-100,true,true);
+    RotateMotorEx(PORT_MOTORS,50,440/2,-100,true,true);
 }
 
-void runToWall() {
-    while(SensorUS(PORT_US) > 10) {
-        OnFwdSync(PORT_MOTORS,50,0);
+void runToWall(int distance) {
+    while(SensorUS(PORT_US) > distance) {
+        OnFwdSync(PORT_MOTORS,50,2);
     }
     Off(PORT_MOTORS);
 }
 
 task main() {
     SetSensorUltrasonic(PORT_US);
+    OnFwdSync(PORT_MOTORS,50,0);
+    Wait(3000);
+    OnFwdSync(PORT_MOTORS,-50,0);
+    Wait(3000);
+    Off(PORT_MOTORS);
+#if 0
     Wait(2000);
     while(!ButtonState(BTNCENTER)) {
         ClearLine(LCD_LINE1);
@@ -27,14 +33,20 @@ task main() {
         Wait(40);
     }
 
-    runToWall();
+    runToWall(7);
     turnRight90();
-    runToWall();
+    runToWall(7);
     turnLeft90();
-    runToWall();
+    runToWall(10);
     turnRight90();
     turnRight90();
-#if 0
+    runToWall(7);
+    turnRight90();
+    runToWall(7);
+    turnRight90();
+    runToWall(10);
+    turnRight90();
+    turnRight90();
     int direction = 0;
     long lStart = MotorRotationCount(PORT_LMOTOR);
     long rStart = MotorRotationCount(PORT_RMOTOR);
