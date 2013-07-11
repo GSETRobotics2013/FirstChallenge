@@ -58,14 +58,17 @@ void HTEnhancedIRSeekerV2(const byte  port, int &dir, int &strength)
   }
 }
 
-void checkIR() {
+bool checkIR() {
     int dir;
     SetSensorLowspeed(S1);
     SetHTIRSeeker2Mode(S1, HTIR2_MODE_1200);
     
     if(dir != 0) {
         PlaySound(SOUND_DOUBLE_BEEP);
+        return true;
     }
+    else
+        return false;
 }
 
 task main() {
