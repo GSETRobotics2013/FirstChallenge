@@ -1,8 +1,9 @@
 #define PORT_RMOTOR OUT_A
 #define PORT_LMOTOR OUT_B
+#define PORT_MOTORS OUT_AB
 #define PORT_LIGHT  IN_4
 #define PORT_COLOR  IN_2
-#define PORT_ULTRASONIC IN_3
+#define PORT_US     IN_3
 
 #define COLOR_BLUE  3
 #define COLOR_RED   7
@@ -66,111 +67,78 @@ void followLine(const LightSensor& ls) {
     drive(PORT_LMOTOR,PORT_RMOTOR,0.5,(readLS(ls)-0.5)/0.5);
 }
 
-void houseCode(){
-#if 0
-  unsigned long stop_time;
-  while(SensorUS(S3)>7){
-    OnFwd(OUT_AB,75);
-    Wait(15);
-  }
+void turnRight90() {
+    RotateMotorEx(PORT_MOTORS,50,440/2,100,true,true);
+}
 
-  //turn right for 2 seconds
-  stop_time = CurrentTick() + 2000;
-  while (CurrentTick() < stop_time) {
-    OnFwd(OUT_A, 25);
-    OnRev(OUT_B, -25);
-  }
-  
-  while(SensorUS(S3)>7){
-    OnFwd(OUT_AB,50);
-    Wait(15);
-  }
-  
-  //turn left for 2 seconds
-  stop_time = CurrentTick() + 2000;
-  while (CurrentTick() < stop_time) {
-    OnFwd(OUT_A, -15);
-    OnRev(OUT_B, 15);
-  }
-  
-  //go forward till 15cm is in front of it
-  //may be replaced with arm code to simply break the plane of the room
-  while(SensorUS(S3)>15){
-    OnFwd(OUT_AB,50);
-    Wait(15);
-  }
-  
-  //code for setting if flag is in this room or not
-  
-  //reverse
-  //may not be needed with arm code implemented
-  while(SensorUS(S3)<75){
-    OnRev(OUT_AB,50);
-    Wait(15);
-  }
-  
-  //turn left for 2 seconds
-  stop_time = CurrentTick() + 2000;
-  while (CurrentTick() < stop_time) {
-    OnFwd(OUT_A, -15);
-    OnRev(OUT_B, 15);
-  }
-  
-  while(SensorUS(S3)>40){
-    OnFwd(OUT_AB,50);
-    Wait(15);
-  }
-  
-  //turn right for 2 seconds
-  stop_time = CurrentTick() + 2000;
-  while (CurrentTick() < stop_time) {
-    OnFwd(OUT_A, 15);
-    OnRev(OUT_B, -15);
-  }
-  
-  //may be replaced with arm's code
-  while(SensorUS(S3)>60){
-    OnFwd(OUT_AB,50);
-    Wait(15);
-  }
-  
-  while(SensorUS(S3)<100){
-    OnRev(OUT_AB,50);
-    Wait(15);
-  }
+void turnLeft90() {
+    RotateMotorEx(PORT_MOTORS,50,440/2,-100,true,true);
+}
 
-  //turn left for 2 seconds
-  stop_time = CurrentTick() + 2000;
-  while (CurrentTick() < stop_time) {
-    OnFwd(OUT_A, -15);
-    OnRev(OUT_B, 15);
-  }
-  
-  while(SensorUS(S3)>7){
-    OnFwd(OUT_AB,50);
-    Wait(15);
-  }
-  
-  //turn right for 2 seconds
-  stop_time = CurrentTick() + 2000;
-  while (CurrentTick() < stop_time) {
-    OnFwd(OUT_A, 15);
-    OnRev(OUT_B, -15);
-  }
-  
-  while(SensorUS(S3)>7){
-    OnFwd(OUT_AB,50);
-    Wait(15);
-  }
-  
-  if(!ballInLeftRoom){
-    while(SensorUS(S3)<80){
-      OnRev(OUT_AB,50);
-      Wait(15);
+void runToWall(bool forward,int distance) {
+    int sgn = forward ? 1 : -1;
+    while(sgn*SensorUS(PORT_US) > sgn*distance) {
+        OnFwdSync(PORT_MOTORS,sgn*50,1);
+        Wait(15);
     }
-  }
-  //done searching every room
-#endif
+    Off(PORT_MOTORS);
+}
+
+void exploreHouse(){
+    runToWall(true,7);
+    turnRight90();
+    runToWall(true,7);
+    runToWall(false,65);
+    turnLeft90();
+    int dist = SensorUS(PORT_US);
+    runToWall(true,7);
+    runToWall(false,dist);
+    turnLeft90();
+    runToWall(true,7);
+}
+
+void alignToWall() {
+    int minDist = 255,
+        prevDist,
+        dist = SensorUS(PORT_US);
+    minDist = dist;
+    int currMotor = MotorRotationCount(PORT_LMOTOR);
+    int negMotorBound = currMotor-1000,
+        posMotorBound = currMotor+1000;
+    int delta = 0;
+    int turn = 100;
+    OnFwdSync(PORT_MOTORS,30,turn);
+    while(turn != 0) {
+        prevDist = dist;
+        dist = SensorUS(PORT_US);
+        if(dist > prevDist && dist > minDist) {
+            int motor = MotorRotationCount(PORT_LMOTOR);
+            if(turn > 0) {
+                posMotorBound = motor;
+                turn = -100;
+                Off(PORT_MOTORS);
+                TextOut(0,LCD_LINE3,"A");
+                minDist = 255;
+                dist = SensorUS(PORT_US);
+            } else {
+                negMotorBound = motor;
+                turn = 0;
+                Off(PORT_MOTORS);
+                TextOut(0,LCD_LINE3,"B");
+            }
+        } else if(dist < minDist) {
+            minDist = dist;
+        }
+        OnFwdSync(PORT_MOTORS,30,turn);
+    }
+    Off(PORT_MOTORS);
+    RotateMotorEx(PORT_MOTORS,30,
+                  ((posMotorBound+negMotorBound)/2)
+                    -MotorRotationCount(PORT_LMOTOR),
+                  100,
+                  true,
+                  true);
+    Off(PORT_MOTORS);
 }
     
 task main() {
@@ -178,7 +146,7 @@ task main() {
 
     ls.port = PORT_LIGHT;
     SetSensorLight(PORT_LIGHT);
-    SetSensorUltrasonic(PORT_ULTRASONIC);
+    SetSensorUltrasonic(PORT_US);
     SetSensorType(PORT_COLOR, SENSOR_TYPE_LOWSPEED);
 
     Wait(250);
@@ -223,7 +191,8 @@ task main() {
         prevDeadBody = deadBody;
         followLine(ls);
     }
-    // houseCode();
     Off(PORT_LMOTOR);
     Off(PORT_RMOTOR);
+    alignToWall();
+    exploreHouse();
 }

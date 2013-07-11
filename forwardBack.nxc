@@ -1,0 +1,16 @@
+#define PORT_RMOTOR OUT_A
+#define PORT_LMOTOR OUT_B
+#define PORT_MOTORS OUT_AB
+task main() {
+    int dir = 1;
+    bool prevState = false;
+    while(1) {
+        bool state = ButtonState(BTNCENTER);
+        if(state && !prevState) {
+            dir *= -1;
+        }
+        prevState = state;
+        OnFwdSync(PORT_MOTORS,dir*50,1);
+        Wait(15);
+    }
+}
