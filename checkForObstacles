@@ -1,11 +1,16 @@
 void checkForObstacles(const LightSensor& ls) {
+    unsigned long stop_time;
     if(SensorUS(PORT_ULTRASONIC) < 10) {
         turnRight90();
-        OnFwd(OUT_AB, 30);
+        stop_time = CurrentTick() + 500;
+        while(CurrentTick() < stop_time)
+            OnFwd(OUT_AB, 30);
         turnLeft90();
-        OnFwd(OUT_AB, 30);
+        stop_time = CurrentTick() + 500;
+        while(CurrentTick() < stop_time)
+            OnFwd(OUT_AB, 30);
         turnLeft90();
-        while(readLS(ls) == 0.0) {
+        while(readLS(ls) - ls.white < 0.1 ) {
             OnFwd(OUT_AB, 15);
         }
     }
