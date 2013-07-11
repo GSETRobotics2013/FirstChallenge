@@ -1,11 +1,11 @@
-void checkForObstacles() {
+void checkForObstacles(const LightSensor& ls) {
     if(SensorUS(PORT_ULTRASONIC) < 10) {
         turnRight90();
         OnFwd(OUT_AB, 30);
         turnLeft90();
         OnFwd(OUT_AB, 30);
         turnLeft90();
-        while(readLS == 0.0) {
+        while(readLS(ls) == 0.0) {
             OnFwd(OUT_AB, 15);
         }
     }
@@ -42,7 +42,7 @@ task main() {
             PlayTone(TONE_C4,100);
         }
         prevDeadBody = deadBody;
-        checkForObstacles();
+        checkForObstacles(ls);
         followLine(ls);
     }
     // houseCode();
