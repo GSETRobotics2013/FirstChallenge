@@ -1,0 +1,56 @@
+void checkForObstacles(const LightSensor& ls) {
+    unsigned long stop_time;
+    if(SensorUS(PORT_ULTRASONIC) < 10) {
+        turnRight90();
+        stop_time = CurrentTick() + 500;
+        while(CurrentTick() < stop_time)
+            OnFwd(OUT_AB, 30);
+        turnLeft90();
+        stop_time = CurrentTick() + 500;
+        while(CurrentTick() < stop_time)
+            OnFwd(OUT_AB, 30);
+        turnLeft90();
+        while(readLS(ls) - ls.white < 0.1 ) {
+            OnFwd(OUT_AB, 15);
+        }
+    }
+}
+
+task main() {
+    LightSensor ls;
+    bool prevDeadBody = false;
+
+    ls.port = PORT_LIGHT;
+    SetSensorLight(PORT_LIGHT);
+    SetSensorUltrasonic(PORT_ULTRASONIC);
+    SetSensorType(PORT_COLOR, SENSOR_TYPE_LOWSPEED);
+
+    Wait(250);
+
+    calibrateLS(ls,false);
+    RotateMotor(PORT_RMOTOR,75,360);
+    calibrateLS(ls,true);
+    RotateMotor(PORT_RMOTOR,75,-360);
+    if(ls.white < ls.black) {
+        unsigned int tmp = ls.white;
+        ls.white = ls.black;
+        ls.black = tmp;
+    }
+
+    int color = 0;
+    while(color != COLOR_RED) {
+        color = SensorHTColorNum(PORT_COLOR);
+        ClearLine(LCD_LINE4);
+        NumOut(0,LCD_LINE4,color);
+        bool deadBody = (color == 3); // 3: blue
+        if(deadBody && !prevDeadBody) {
+            PlayTone(TONE_C4,100);
+        }
+        prevDeadBody = deadBody;
+        checkForObstacles(ls);
+        followLine(ls);
+    }
+    // houseCode();
+    Off(PORT_LMOTOR);
+    Off(PORT_RMOTOR);
+}
