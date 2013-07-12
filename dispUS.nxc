@@ -1,9 +1,9 @@
 #define PORT_US     IN_3
 task main() {
-    SetSensorUltrasonic(PORT_US);
+    //SetSensorUltrasonic(PORT_US);
     while(1) {
         ClearLine(LCD_LINE1);
-        NumOut(0,LCD_LINE1,SensorUS(PORT_US));
+        NumOut(0,LCD_LINE1,SensorRaw(PORT_US));
         Wait(50);
     }
 }

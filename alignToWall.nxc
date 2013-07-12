@@ -5,6 +5,19 @@
 
 #define SPEED 50
 
+struct Filter {
+    unsigned int value; // 30/2 fixed point
+};
+
+// Frac is fixed-point, val is not
+// return is also not fixed point
+unsigned int complementFilter(Filter& f,unsigned int val,
+                                        unsigned int frac) {
+    val <<= 2;
+    f.value = (((1<<2)-frac)*f.value+frac*val)>>2;
+    return f.value>>2;
+}
+
 float fabs(float x) {
     return x < 0 ? -x : x;
 }
@@ -17,6 +30,8 @@ task main() {
         int minDist = 255,
             prevDist,
             dist = SensorUS(PORT_US);
+        Filter filter;
+        filter.value = dist<<2;
         minDist = dist;
         int currMotor = MotorRotationCount(PORT_LMOTOR);
         int negMotorBound = currMotor-1000,
@@ -29,7 +44,8 @@ task main() {
             ClearLine(LCD_LINE1);
             ClearLine(LCD_LINE2);
             NumOut(0,LCD_LINE1,turn);
-            dist = SensorUS(PORT_US);
+            dist = complementFilter(filter,SensorUS(PORT_US),
+                                           1<<1); // 1/2
             TextOut(dist,LCD_LINE2,"0");
             if(dist > prevDist && dist > minDist) {
                 int motor = MotorRotationCount(PORT_LMOTOR);

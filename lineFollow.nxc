@@ -68,11 +68,11 @@ void followLine(const LightSensor& ls) {
 }
 
 void turnRight90() {
-    RotateMotorEx(PORT_MOTORS,50,440/2,100,true,true);
+    RotateMotorEx(PORT_MOTORS,50,470/2,100,true,true);
 }
 
 void turnLeft90() {
-    RotateMotorEx(PORT_MOTORS,50,440/2,-100,true,true);
+    RotateMotorEx(PORT_MOTORS,50,400/2,-100,true,true);
 }
 
 void runToWall(bool forward,int distance) {
@@ -85,16 +85,16 @@ void runToWall(bool forward,int distance) {
 }
 
 void exploreHouse(){
-    runToWall(true,7);
+    runToWall(true,10);
     turnRight90();
-    runToWall(true,7);
+    runToWall(true,10);
     runToWall(false,65);
     turnLeft90();
-    int dist = SensorUS(PORT_US);
-    runToWall(true,7);
+    int dist = SensorUS(PORT_US)-1;
+    runToWall(true,10);
     runToWall(false,dist);
     turnLeft90();
-    runToWall(true,7);
+    runToWall(true,10);
 }
 
 void alignToWall() {
@@ -111,7 +111,7 @@ void alignToWall() {
     while(turn != 0) {
         prevDist = dist;
         dist = SensorUS(PORT_US);
-        if(dist > prevDist && dist > minDist) {
+        if(dist > prevDist && dist > minDist+2) {
             int motor = MotorRotationCount(PORT_LMOTOR);
             if(turn > 0) {
                 posMotorBound = motor;
@@ -195,4 +195,5 @@ task main() {
     Off(PORT_RMOTOR);
     alignToWall();
     exploreHouse();
+    PlaySound(SOUND_UP);
 }
