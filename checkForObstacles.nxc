@@ -12,6 +12,7 @@ void checkForObstacles(const LightSensor& ls) {
         turnLeft90();
         while(readLS(ls) - ls.white < 0.1 ) {
             OnFwd(OUT_AB, 15);
+        turnRight90();
         }
     }
 }
