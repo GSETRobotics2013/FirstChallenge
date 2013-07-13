@@ -89,7 +89,6 @@ task main()
              alreadySynced = true;
          }
          OnFwdSync(OUT_AB, 50, (5-dir) * -25);
-         alreadySynced = true;
       }
       else {
          OnFwdSync(OUT_AB, 25, 100);
