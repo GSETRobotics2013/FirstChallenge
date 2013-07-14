@@ -335,7 +335,5 @@ task main() {
     Off(PORT_RMOTOR);
     alignToWall();
     exploreHouse();
-    alignToIR();
-    runToIR(200);
     PlaySound(SOUND_UP);
 }

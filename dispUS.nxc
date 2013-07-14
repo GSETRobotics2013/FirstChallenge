@@ -1,9 +1,18 @@
+#define PORT_RMOTOR OUT_A
+#define PORT_LMOTOR OUT_B
 #define PORT_US     IN_3
 task main() {
-    //SetSensorUltrasonic(PORT_US);
+    SetSensorUltrasonic(PORT_US);
     while(1) {
         ClearLine(LCD_LINE1);
-        NumOut(0,LCD_LINE1,SensorRaw(PORT_US));
+        ClearLine(LCD_LINE2);
+        ClearLine(LCD_LINE3);
+        TextOut(0,LCD_LINE1,"US");
+        NumOut(3*8,LCD_LINE1,SensorUS(PORT_US));
+        TextOut(0,LCD_LINE2,"L");
+        NumOut(3*8,LCD_LINE2,MotorRotationCount(PORT_LMOTOR));
+        TextOut(0,LCD_LINE3,"R");
+        NumOut(3*8,LCD_LINE3,MotorRotationCount(PORT_RMOTOR));
         Wait(50);
     }
 }
